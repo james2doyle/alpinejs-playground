@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpine.js Live Playground</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        const makeContent = (code) => `
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <script src="https://cdn.tailwindcss.com"><\/script>
+                    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"><\/script>
+                    <style>
+                        body { margin: 0; padding: 0; background-color: white; overflow-x: hidden; }
+                        [x-cloak] { display: none !important; }
+                    </style>
+                </head>
+                <body>
+                    ${code}
+                </body>
+            </html>
+        `;
+
+        const defaultCode = `<!-- Try creating a counter! -->\n<div x-data="{ count: 0 }" class="p-8 text-center font-sans">\n    <h1 class="text-4xl font-bold mb-4" x-text="count"></h1>\n    \n    <div class="flex gap-2 justify-center">\n        <button \n            @click="count--"\n            class="px-4 py-2 bg-slate-200 rounded hover:bg-slate-300 transition"\n        >Decrease</button>\n\n        <button \n            @click="count++"\n            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"\n        >Increase</button>\n    </div>\n\n    <p class="mt-4 text-slate-500 text-sm italic" x-show="count > 10">\n        That's a lot of clicks!\n    </p>\n</div>`;
+
+        document.addEventListener('alpine:init', () => {
+            const compressor = JsonUrl('lzma');
+
+            /**
+             * Alpine.js magic property to write text to the clipboard.
+             *
+             * Usage:  @click="$clipboard(stringToCopy).then(copied = true)"
+             *
+             * @returns {(subject: string) => Promise<void>} - A function that takes the text to copy as an argument.
+             */
+            Alpine.magic('clipboard', () => {
+                return (subject) => navigator.clipboard.writeText(subject);
+            });
+
+            /**
+             * Alpine.js magic property to confirm a change.
+             *
+             * Usage:  @click="$confirm('Are you sure?').then(copied = true)"
+             *
+             * @returns {(message: string) => Promise<void>} - A function that takes the text to display as an argument.
+             */
+            Alpine.magic('confirm', () => {
+                return (message) => {
+                    return new Promise((resolve, reject) => {
+                        if (confirm(message)) {
+                            resolve();
+                        } else {
+                            reject();
+                        }
+                    });
+                };
+            });
+
+            Alpine.data('playground', () => ({
+                code: '',
+                status: 'Ready',
+                isUpdating: false,
+                copyComplete: false,
+                saved: false,
+                fromUrl: (new URLSearchParams(window.location.search)).get('s'),
+                timeout: null,
+
+                // Resizing logic state
+                splitWidth: 50, // percentage
+                isResizing: false,
+
+                init() {
+                    if (this.fromUrl) {
+                        compressor.decompress(this.fromUrl).then((output) => {
+                            this.code = output;
+                            this.updatePreview();
+                        });
+                    } else {
+                        this.code = defaultCode;
+                    }
+
+                    Alpine.nextTick(() => {
+                        // this.code = defaultCode;
+                        this.updatePreview();
+                    });
+                },
+
+                handleInput() {
+                    this.status = 'Typing...';
+                    this.isUpdating = true;
+
+                    clearTimeout(this.timeout);
+                    this.timeout = setTimeout(() => {
+                        this.updatePreview();
+                        this.status = 'Synced';
+                        this.isUpdating = false;
+                        this.copyComplete = false;
+                        this.saved = false;
+                    }, 500);
+                },
+
+                handleCopy() {
+                    this.copyComplete = true;
+
+                    clearTimeout(this.timeout);
+                    this.timeout = setTimeout(() => {
+                        this.copyComplete = false;
+                    }, 2000);
+                },
+
+                updatePreview() {
+                    const frame = document.getElementById('preview-frame');
+                    if (!frame) return;
+
+                    const frameDoc = frame.contentDocument || frame.contentWindow.document;
+
+                    frameDoc.open();
+                    frameDoc.write(makeContent(this.code));
+                    frameDoc.close();
+                },
+
+                // Resize methods
+                startResizing() {
+                    this.isResizing = true;
+                },
+
+                stopResizing() {
+                    this.isResizing = false;
+                },
+
+                resize(e) {
+                    if (!this.isResizing) return;
+
+                    // Calculate percentage based on mouse position
+                    const percentage = (e.clientX / window.innerWidth) * 100;
+
+                    // Constrain between 20% and 80%
+                    if (percentage > 20 && percentage < 80) {
+                        this.splitWidth = percentage;
+                    }
+                },
+
+                resetCode() {
+                    this.code = defaultCode;
+                    this.isUpdating = false;
+                    this.copyComplete = false;
+                    this.saved = false;
+                    const url = new URL(window.location);
+                    url.searchParams.set("s", "");
+                    window.history.pushState({}, "", url);
+
+                    this.updatePreview();
+                },
+
+                updateUrl() {
+                    compressor.compress(this.code).then(output => {
+                        this.saved = true;
+
+                        clearTimeout(this.timeout);
+                        this.timeout = setTimeout(() => {
+                            this.saved = false;
+                        }, 2000);
+
+                        const url = new URL(window.location);
+                        url.searchParams.set("s", output);
+                        window.history.pushState({}, "", url);
+                    });
+                },
+            }));
+        });
+    </script>
+
+    <script src="https://unpkg.com/json-url@4.0.0/dist/browser/json-url.js"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+        .editor-textarea {
+            font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
+            resize: none;
+            scrollbar-width: thin;
+            scrollbar-color: #475569 transparent;
+        }
+        /* Handle transition for smooth resizing if desired, or keep it snappy */
+        .resizer:hover {
+            background-color: #3b82f6;
+        }
+    </style>
+</head>
+<body
+    class="h-full overflow-hidden text-slate-200 select-none"
+    x-data="playground"
+    @mousemove="resize"
+    @mouseup="stopResizing"
+    @mouseleave="stopResizing"
+>
+
+    <!-- Header -->
+    <header class="flex items-center justify-between px-6 py-3 border-b border-slate-800 bg-slate-900 z-20">
+        <div class="flex items-center gap-3">
+            <svg class="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <h1 class="text-lg font-bold tracking-tight text-white">Alpine<span class="text-blue-400">Play</span></h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <button type="button" @click="$confirm('Are you sure?').then(() => resetCode())" class="text-xs font-medium text-slate-400 hover:text-white transition">Reset</button>
+                    <button type="button" @click="$clipboard(code).then(() => handleCopy())" class="text-xs font-medium text-slate-400 hover:text-white transition" :class="{ 'text-white': copyComplete }">
+                        <span x-show="!copyComplete">Copy</span>
+                        <span x-show="copyComplete">Copied!</span>
+                    </button>
+                    <button type="button" @click="updateUrl" class="text-xs font-medium text-slate-400 hover:text-white transition" :class="{ 'text-white': saved }">
+                        <span x-show="!saved">Save</span>
+                        <span x-show="saved">Saved!</span>
+                    </button>
+            <div class="h-4 w-px bg-slate-800"></div>
+            <span class="text-xs text-slate-500" x-text="status"></span>
+        </div>
+    </header>
+
+    <main class="flex h-[calc(100%-57px)] w-full overflow-hidden relative">
+        <!-- Editor Section -->
+        <div
+            class="relative flex flex-col min-w-0 h-full border-r border-slate-800 bg-slate-900"
+            :style="`width: ${splitWidth}%`"
+        >
+            <div class="flex items-center justify-between px-4 py-2 bg-slate-800/50 text-[10px] uppercase tracking-widest font-semibold text-slate-500">
+                <div>HTML + Alpine.js</div>
+            </div>
+            <textarea
+                x-model="code"
+                @input="handleInput"
+                spellcheck="false"
+                class="editor-textarea flex-1 w-full p-6 bg-slate-900 focus:outline-none focus:ring-0 text-sm leading-relaxed text-blue-100/90"
+            ></textarea>
+        </div>
+
+        <!-- Resize Handle -->
+        <div
+            @mousedown="startResizing"
+            class="resizer w-1 hover:w-1.5 transition-all bg-slate-800 cursor-col-resize h-full z-10 flex-shrink-0"
+            :class="isResizing ? 'bg-blue-500 w-1.5' : ''"
+        ></div>
+
+        <!-- Preview Section -->
+        <div
+            class="flex flex-col min-w-0 h-full bg-white relative"
+            :style="`width: ${100 - splitWidth}%`"
+        >
+            <!-- Overlay to prevent iframe from intercepting mouse events while resizing -->
+            <div
+                x-show="isResizing"
+                class="absolute inset-0 z-20"
+                style="background: transparent;"
+            ></div>
+
+            <div class="flex items-center justify-between px-4 py-2 bg-slate-100 text-[10px] uppercase tracking-widest font-semibold text-slate-500 border-b border-slate-200">
+                Preview
+                <span :class="isUpdating ? 'opacity-100' : 'opacity-0'" class="transition-opacity text-blue-500 font-bold">Updating...</span>
+            </div>
+            <div class="flex-1 relative overflow-hidden">
+                <iframe
+                    id="preview-frame"
+                    class="w-full h-full border-none"
+                ></iframe>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>
