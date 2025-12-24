@@ -38,5 +38,5 @@ The playground automatically generates shareable URLs when you click "Save". The
 To run this playground locally:
 
 1. Clone this repository
-2. Open `index.html` in your browser
+2. Open `docs/index.html` in your browser
 3. No build step required - it runs entirely in the browser
