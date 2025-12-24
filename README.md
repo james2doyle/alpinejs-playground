@@ -1,5 +1,7 @@
 # Alpine Playground
 
+![screenshot.png](screenshot.png)
+
 A live coding playground for [Alpine.js](https://alpinejs.dev/) with Tailwind CSS support. Write, test, and share Alpine.js components in real-time with an interactive split-pane interface.
 
 ## Features
