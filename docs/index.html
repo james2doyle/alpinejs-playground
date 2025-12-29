@@ -3,7 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="/alpinejs-playground/logo.svg" />
     <title>Alpine.js Live Playground</title>
+    <meta name="description" content="A live coding playground for Alpine.js that supports TailwindCSS and shareable URLs" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://james2doyle.github.io/alpinejs-playground/" />
+    <meta property="og:title" content="Alpine.js Live Playground" />
+    <meta property="og:description" content="A live coding playground for Alpine.js that supports TailwindCSS and shareable URLs" />
+    <meta property="og:image" content="https://james2doyle.github.io/alpinejs-playground/social-preview.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://james2doyle.github.io/alpinejs-playground/" />
+    <meta property="twitter:title" content="Alpine.js Live Playground" />
+    <meta property="twitter:description" content="A live coding playground for Alpine.js that supports TailwindCSS and shareable URLs" />
+    <meta property="twitter:image" content="https://james2doyle.github.io/alpinejs-playground/social-preview.png" />
+
     <style type="text/css">
         /*! tailwindcss v4.1.18 | MIT License | https://tailwindcss.com */
         @layer properties;
@@ -80,7 +97,7 @@
           b, strong {
             font-weight: bolder;
           }
-          code, kbd, samp, pre {
+          code, kbd, samp, pre, textarea {
             font-family: var(--default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace);
             font-feature-settings: var(--default-mono-font-feature-settings, normal);
             font-variation-settings: var(--default-mono-font-variation-settings, normal);
@@ -547,6 +564,12 @@
         }
     </style>
 
+    <link rel="preconnect" href="https://james2doyle.github.io" />
+    <link rel="dns-prefetch" href="https://james2doyle.github.io" />
+
+    <link rel="preconnect" href="https://unpkg.com" />
+    <link rel="dns-prefetch" href="https://unpkg.com" />
+
     <script defer src="https://unpkg.com/json-url@4.0.0/dist/browser/json-url.js"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
@@ -635,6 +658,10 @@
             <!DOCTYPE html>
             <html>
                 <head>
+                    <link rel="preconnect" href="https://unpkg.com" />
+                    <link rel="dns-prefetch" href="https://unpkg.com" />
+                    <link rel="preconnect" href="https://cdn.tailwindcss.com" />
+                    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com" />
                     <script src="https://cdn.tailwindcss.com"><\/script>
                     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"><\/script>
                     <style>
